@@ -72,3 +72,98 @@ Route.get('/api/rotaDesejada', 'NomeController.index')
 ```
 
 Agora, quando você acessar /api/rotaDesejada, a rota chamará o método index() do controller e retornará os dados correspondentes.
+
+## Manipulação de Banco de Dados com AdonisJS
+
+O AdonisJS oferece suporte a duas abordagens para manipulação de bancos de dados: Query Builder e ORM (Object-Relational Mapping).
+
+### Query Builder
+
+O Query Builder é uma forma de construir consultas SQL de maneira programática por meio de métodos. Ele oferece uma maneira mais legível e segura de criar consultas em comparação com a escrita direta de SQL. Com o Query Builder, você pode encadear métodos para construir consultas complexas. Veja um exemplo de como criar uma consulta com Query Builder:
+
+```javascript
+const Database = use('Database')
+
+const users = await Database.select('id', 'username').from('users').where('active', true)
+```
+
+### ORM (Object-Relational Mapping)
+
+O AdonisJS também inclui um ORM chamado Lucid que mapeia registros do banco de dados para objetos JavaScript. Isso permite que você trabalhe com registros de banco de dados como se fossem objetos, tornando o código mais legível e expressivo. Aqui está como você pode usar o Lucid ORM:
+
+Primeiro, instale o pacote Lucid com o comando `npm install @adonisjs/lucid`.
+
+Em seguida, execute `node ace invoke @adonisjs/lucid` para selecionar o driver do banco de dados que você deseja usar e configurar as informações no arquivo .env.
+
+Você deve criar um Model para cada tabela que deseja interagir. Use o comando node ace make:model NomeModel para criar um Model.
+
+Agora, você pode usar o Model para realizar operações no banco de dados de forma mais fácil e expressiva. Aqui está um exemplo:
+
+``` javascript
+const Post = use('App/Models/Post')
+
+const post = new Post()
+post.title = 'Meu primeiro post'
+post.content = 'Conteúdo do post'
+await post.save()
+
+// Consulta
+const posts = await Post.query().where('published', true).fetch()
+
+```
+
+## Migrations
+
+As Migrations são usadas para criar, atualizar e excluir tabelas no banco de dados de forma programática e controlada. Elas ajudam a manter o controle das mudanças no esquema do banco de dados ao longo do tempo.
+
+Para criar uma Migration no AdonisJS, você pode usar o comando `node ace make:migration nomeMigration`. Isso criará um arquivo de Migration na pasta `database/migrations`.
+
+Em seguida, você pode definir as colunas da tabela no método `up()` da Migration. Aqui está um exemplo de criação de uma tabela:
+
+```javascript
+public async up() {
+  this.schema.createTable('posts', (table) => {
+    table.increments('id')
+    table.string('title')
+    table.text('content', 'longtext')
+    table.timestamp('created_at', { useTz: true })
+    table.timestamp('updated_at', { useTz: true })
+  })
+}
+```
+
+Para reverter as mudanças feitas por uma Migration, você define o método `down()` correspondente. Por exemplo, para reverter a criação da tabela, você faria:
+
+```javascript
+public async down() {
+  this.schema.dropTable('posts')
+}
+```
+
+Para executar as Migrations, use o comando node ace migration:run. Para reverter a última Migration, use `node ace migration:rollback`.
+
+### Atualização de Tabelas com Migrations
+
+Para atualizar tabelas existentes, você pode criar uma nova Migration que adiciona ou remove colunas da tabela. Use o comando `node ace make:migration nomeMigration --table=nomeTabela` para criar uma Migration específica para uma tabela.
+
+No método `up()` da Migration, você pode usar `table.alterTable()` para adicionar ou modificar colunas existentes. Aqui está um exemplo:
+
+```javascript
+public async `up()` {
+  this.schema.alterTable('posts', (table) => {
+    table.string('slug')
+  })
+}
+```
+
+No método `down()`, você define as ações reversas para reverter as alterações. Por exemplo:
+
+```javascript
+public async `down()` {
+  this.schema.alterTable('posts', (table) => {
+    table.dropColumn('slug')
+  })
+}
+```
+
+Lembre-se de executar as Migrations para aplicar as alterações ou reverter as ações, conforme necessário.

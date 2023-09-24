@@ -167,3 +167,108 @@ public async `down()` {
 ```
 
 Lembre-se de executar as Migrations para aplicar as alterações ou reverter as ações, conforme necessário.
+
+## Definindo Models no AdonisJS
+
+No AdonisJS, os modelos são usados para representar as tabelas do banco de dados e definir a estrutura das colunas. Você pode criar um modelo com o seguinte 
+
+comando:
+```bash
+node ace make:model NomeDoModelo
+```
+
+Aqui está um exemplo de como um modelo pode ser definido:
+
+```javascript
+import { DateTime } from 'luxon'
+import { BaseModel, column } from '@ioc:Adonis/Lucid/Orm'
+
+export default class Post extends BaseModel {
+  @column({ isPrimary: true })
+  public id: number
+
+  @column()
+  public title: string
+
+  @column()
+  public content: string
+
+  @column.dateTime({ autoCreate: true })
+  public createdAt: DateTime
+
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  public updatedAt: DateTime
+}
+```
+
+Neste exemplo, o modelo Post representa uma tabela com as colunas id, title, content, createdAt e updatedAt.
+
+### Aplicando a Lógica do Controller (Operações CRUD)
+
+O controlador (Controller) é usado para manipular as operações CRUD (Criar, Ler, Atualizar e Excluir) em seus modelos. Você pode criar um controlador com os métodos CRUD padrão usando o seguinte comando:
+
+```bash
+node ace make:controller NomeDoController -r
+```
+
+Isso criará um controlador com os métodos index, create, store, show, edit, update, e destroy já definidos. Você pode personalizá-los conforme necessário.
+
+Aqui está um exemplo simplificado do controlador PostsController:
+
+```javascript
+import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
+import Post from 'App/Models/Post'
+
+export default class PostsController {
+  public async index({}: HttpContextContract) {
+    const posts = await Post.all()
+    return posts
+  }
+
+  public async store({ request }: HttpContextContract) {
+    const data = request.only(['title', 'content'])
+    const post = await Post.create(data)
+    return post
+  }
+
+  public async show({ params }: HttpContextContract) {
+    const post = await Post.findOrFail(params.id)
+    return post
+  }
+
+  public async update({ request, params }: HttpContextContract) {
+    const post = await Post.findOrFail(params.id)
+    const data = request.only(['title', 'content'])
+
+    post.merge(data)
+    await post.save()
+
+    return post
+  }
+
+  public async destroy({ params }: HttpContextContract) {
+    const post = await Post.findOrFail(params.id)
+    await post.delete()
+  }
+}
+```
+
+Neste exemplo, o PostsController contém os métodos CRUD padrão para o modelo Post. Isso permite que você liste todos os posts, crie um novo post, exiba um post específico, atualize um post existente e exclua um post.
+
+### Query Builder no AdonisJS
+
+O AdonisJS oferece suporte a consultas SQL usando Query Builder. Você pode importar o módulo Database e usar métodos fluentes para construir consultas SQL de maneira programática. Aqui está um exemplo de uso do Query Builder no controlador PostsController:
+
+```javascript
+import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
+import Database from '@ioc:Adonis/Lucid/Database'
+
+export default class PostsController {
+  public async show({ params }: HttpContextContract) {
+    const post = await Database.rawQuery(`SELECT * FROM posts WHERE id = ${params.id}`)
+    return post
+  }
+}
+```
+
+No exemplo acima, uma consulta SQL simples é executada usando o Query Builder para recuperar um post específico com base no ID fornecido.
